@@ -1,1 +1,1 @@
-# react-course-academind
+# Academind React Course 
