@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import IngredientForm from "./IngredientForm";
 import IngredientList from "./IngredientList";
@@ -7,29 +7,14 @@ import Search from "./Search";
 const Ingredients = () => {
   const [userIngredients, setUserIngredients] = useState([]);
 
-  // Only runs for the first rerender of this component
-  // like componentDidMount
   useEffect(() => {
-    fetch("https://hooks-01-starting-project.firebaseio.com/ingredients.json")
-      .then(response => response.json)
-      .then(responseData => {
-        const loadedIngredients = [];
-        for (const key in responseData) {
-          loadedIngredients.push({
-            id: key,
-            title: responseData[key].title,
-            amount: responseData[key].amount
-          });
-        }
-        setUserIngredients(loadedIngredients);
-      });
-    // need to have [] as the second argument because then this will run only once on the first render
-    // i.e. will act similar to componentdidmount
-  }, []);
+    console.log("RENDERING INGREDIENTS", userIngredients);
+  }, [userIngredients]);
 
-  // cannot simply use fetch to get information from the server here because
-  // it will run once the component is rendered. Then it will chnage the state
-  // causing the component to rerender, thus creating an infinite loop
+  // useCallback: caches the function so onLoadIngredients does not get recreated every rerender
+  const filteredIngredientsHandler = useCallback(filteredIngredients => {
+    setUserIngredients(filteredIngredients);
+  }, []);
 
   const addIngredientHandler = ingredient => {
     fetch("https://hooks-01-starting-project.firebaseio.com/ingredients.json", {
@@ -59,7 +44,7 @@ const Ingredients = () => {
       <IngredientForm onAddIngredient={addIngredientHandler} />
 
       <section>
-        <Search />
+        <Search onLoadIngredients={filteredIngredientsHandler} />
         <IngredientList
           ingredients={userIngredients}
           onRemoveItem={removeIngredientHandler}
