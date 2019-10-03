@@ -11,8 +11,8 @@ const Search = React.memo(props => {
   const inputRef = useRef();
 
   useEffect(() => {
-    if (enteredFilter === inputRef.current.value) {
-      setTimeout(() => {
+    const timer = setTimeout(() => {
+      if (enteredFilter === inputRef.current.value) {
         const query =
           enteredFilter.length === 0
             ? ""
@@ -33,8 +33,15 @@ const Search = React.memo(props => {
             }
             onLoadIngredients(loadedIngredients);
           });
-      }, 500);
-    }
+      }
+    }, 500);
+
+    // uses a function here because this will only run the second time
+    // this will run before the set Timeout
+    // only have one on going timer in memory
+    return () => {
+      clearTimeout(timer);
+    };
   }, [enteredFilter, onLoadIngredients, inputRef]);
 
   // cannot simply use fetch to get information from the server here because
