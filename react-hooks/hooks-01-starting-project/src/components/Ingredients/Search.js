@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import Card from "../UI/Card";
 import "./Search.css";
@@ -6,34 +6,36 @@ import "./Search.css";
 const Search = React.memo(props => {
   const { onLoadIngredients } = props;
   const [enteredFilter, setEnteredFilter] = useState("");
+  // this establishes a reference to the input value. Thus can get value
+  // currently in input
+  const inputRef = useRef();
 
-  // FIREBASE: update the filtered ingredients in firebase
-  // Only runs for the first rerender of this component
-  // like componentDidMount
   useEffect(() => {
-    const query =
-      enteredFilter.length === 0
-        ? ""
-        : `?orderBy="title"&equalTo="${enteredFilter}"`;
-    fetch(
-      "https://hooks-01-starting-project.firebaseio.com/ingredients.json" +
-        query
-    )
-      .then(response => response.json())
-      .then(responseData => {
-        const loadedIngredients = [];
-        for (const key in responseData) {
-          loadedIngredients.push({
-            id: key,
-            title: responseData[key].title,
-            amount: responseData[key].amount
+    if (enteredFilter === inputRef.current.value) {
+      setTimeout(() => {
+        const query =
+          enteredFilter.length === 0
+            ? ""
+            : `?orderBy="title"&equalTo="${enteredFilter}"`;
+        fetch(
+          "https://hooks-01-starting-project.firebaseio.com/ingredients.json" +
+            query
+        )
+          .then(response => response.json())
+          .then(responseData => {
+            const loadedIngredients = [];
+            for (const key in responseData) {
+              loadedIngredients.push({
+                id: key,
+                title: responseData[key].title,
+                amount: responseData[key].amount
+              });
+            }
+            onLoadIngredients(loadedIngredients);
           });
-        }
-        onLoadIngredients(loadedIngredients);
-      });
-    // need to have [] as the second argument because then this will run only once on the first render
-    // i.e. will act similar to componentdidmount
-  }, [enteredFilter, onLoadIngredients]);
+      }, 500);
+    }
+  }, [enteredFilter, onLoadIngredients, inputRef]);
 
   // cannot simply use fetch to get information from the server here because
   // it will run once the component is rendered. Then it will chnage the state
@@ -45,6 +47,7 @@ const Search = React.memo(props => {
         <div className="search-input">
           <label>Filter by Title</label>
           <input
+            ref={inputRef}
             type="text"
             value={enteredFilter}
             onChange={event => setEnteredFilter(event.target.value)}
